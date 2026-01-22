@@ -5,7 +5,6 @@ wandb
 **/__pycache__/**
 .idea
 figs
-checkpoints
 .ipynb_checkpoints
 *.ipynb
 *.pt
