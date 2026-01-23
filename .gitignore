@@ -6,7 +6,7 @@ wandb
 .idea
 figs
 .ipynb_checkpoints
-*.ipynb
+# *.ipynb
 #*.pt
 *.pth
 tensordiffeq
