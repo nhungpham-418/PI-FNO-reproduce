@@ -77,7 +77,7 @@ class MatReader(object):
         self.to_float = to_float
 
 
-class BurgersLoader(object):
+class BurgersLoader(object): 
     def __init__(self, datapath, nx=2 ** 10, nt=100, sub=8, sub_t=1, new=False):
         dataloader = MatReader(datapath)
         self.sub = sub

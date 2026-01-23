@@ -1,6 +1,6 @@
 data:
   name: Burgers
-  datapath: '../data/burgers_pino.mat'
+  datapath: '../data/burgers_pino_new.mat'
   total_num: 1000
   offset: 0
   n_sample: 800
@@ -10,7 +10,7 @@ data:
   sub_t: 1
 
 model:
-  layers: [16, 24, 24, 32, 32]
+  layers: [64, 64, 64, 64, 64] #[16, 24, 24, 32, 32]
   modes1: [15, 12, 9, 9]
   modes2: [15, 12, 9, 9]
   fc_dim: 128
@@ -27,7 +27,7 @@ train:
   f_loss: 1.0
   xy_loss: 0.0
   save_dir: 'burgers-FDM'
-  save_name: 'burgers-pretrain-eqn.pt'
+  save_name: 'burgers-pretrain-eqn-kcut2.pt'
 
 log:
   project: PINO-burgers-pretrain

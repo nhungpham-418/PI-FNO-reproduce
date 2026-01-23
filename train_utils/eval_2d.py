@@ -75,7 +75,7 @@ def eval_burgers(model,
     f_err = []
 
     for x, y in pbar:
-        x, y = x.to(device), y.to(device)
+        x, y = x.to(device), y.to(device) 
         out = model(x).reshape(y.shape)
         data_loss = myloss(out, y)
 

@@ -138,7 +138,7 @@ def train_2d_burger(model,
     ic_weight = config['train']['ic_loss']
     model.train()
     myloss = LpLoss(size_average=True)
-    pbar = range(config['train']['epochs'])
+    pbar = range(config['train']['epochs']) 
     if use_tqdm:
         pbar = tqdm(pbar, dynamic_ncols=True, smoothing=0.1)
 
