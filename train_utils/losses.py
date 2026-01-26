@@ -244,6 +244,85 @@ def PINO_loss(u, u0, v):
     return loss_u, loss_f
 
 
+#############################################################################################
+# New loss for Traffic Equation
+def FDM_Traffic(u, v, D=1):
+    batchsize = u.size(0)
+    nt = u.size(1)
+    nx = u.size(2)
+
+    # 1. Grid Setup
+    u = u.reshape(batchsize, nt, nx)
+    dt = D / (nt-1)
+    dx = D / (nx)
+
+    # 2. Spectral Spatial Derivative (ux)
+    u_h = torch.fft.fft(u, dim=2)
+    k_max = nx // 2
+    # Wavenumbers
+    k_x = torch.cat((torch.arange(start=0, end=k_max, step=1, device=u.device),
+                     torch.arange(start=-k_max, end=0, step=1, device=u.device)), 0).reshape(1, 1, nx)
+    
+    # Compute derivative in Fourier domain: i*k*u_h
+    ux_h = 2j * np.pi * k_x * u_h
+    uxx_h = 2j * np.pi * k_x * ux_h
+    
+    # Inverse FFT to get physical space derivative
+    # Note: slicing :k_max+1 accounts for irfft expectation of one-sided input
+    ux = torch.fft.irfft(ux_h[:, :, :k_max+1], dim=2, n=nx)
+    uxx = torch.fft.irfft(uxx_h[:, :, :k_max+1], dim=2, n=nx)
+
+    # 3. Finite Difference Time Derivative (ut)
+    # Central difference: (u(t+1) - u(t-1)) / 2dt
+    ut = (u[:, 2:, :] - u[:, :-2, :]) / (2 * dt)
+
+    # 4. Construct Coefficient: t * (u - u^2/2)
+    # Create time vector from 0 to D
+    t = torch.linspace(0, D, nt, device=u.device)
+    
+    # Slice 't' to match the central difference indices (1 to -1)
+    # Reshape to (1, nt-2, 1) to broadcast against (batch, nt-2, nx)
+    t_mid = t[1:-1].reshape(1, -1, 1)
+    
+    # Slice 'u' and 'ux' to match the time indices where 'ut' is valid
+    u_mid = u[:, 1:-1, :]
+    ux_mid = ux[:, 1:-1, :]
+    uxx_mid = uxx[:, 1:-1, :]
+    
+    # Calculate the nonlinear term
+    nonlinear_term = t_mid * (u_mid - 0.5 * u_mid**2)
+
+    # 5. Compute Residual
+    # Equation: u_t + t(u - u^2/2)u_x = 0
+    Du = ut + nonlinear_term * ux_mid - v * uxx_mid
+    
+    return Du
+
+def traffic_loss(u, u0, v):
+    batchsize = u.size(0)
+    nt = u.size(1)
+    nx = u.size(2)
+
+    u = u.reshape(batchsize, nt, nx)
+    # lploss = LpLoss(size_average=True)
+
+    index_t = torch.zeros(nx,).long()
+    index_x = torch.tensor(range(nx)).long()
+    boundary_u = u[:, index_t, index_x]
+    loss_u = F.mse_loss(boundary_u, u0)
+
+    Du = FDM_Traffic(u, v)[:, :, :]
+    f = torch.zeros(Du.shape, device=u.device)
+    loss_f = F.mse_loss(Du, f)
+
+    # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
+    # loss_bc1 = F.mse_loss((u[:, :, 1] - u[:, :, -1]) /
+    #                       (2/(nx)), (u[:, :, 0] - u[:, :, -2])/(2/(nx)))
+    return loss_u, loss_f
+
+#############################################################################################
+
+
 def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
     batchsize = u.size(0)
     nx = u.size(1)
