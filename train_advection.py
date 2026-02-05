@@ -4,15 +4,15 @@ import yaml
 import torch
 from models import FNO2d
 from train_utils import Adam
-from train_utils.datasets import TrafficLoader
-from train_utils.train_2d import train_2d_traffic
-from train_utils.eval_2d import eval_traffic
+from train_utils.datasets import AdvectionLoader
+from train_utils.train_2d import train_2d_advection
+from train_utils.eval_2d import eval_advection
 
 
 def run(args, config):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     data_config = config['data']
-    dataset = TrafficLoader(data_config['datapath'],
+    dataset = AdvectionLoader(data_config['datapath'],
                             nx=data_config['nx'], nt=data_config['nt'],
                             sub=data_config['sub'], sub_t=data_config['sub_t'], new=True)
     train_loader = dataset.make_loader(n_sample=data_config['n_sample'],
@@ -35,9 +35,9 @@ def run(args, config):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                      milestones=config['train']['milestones'],
                                                      gamma=config['train']['scheduler_gamma'])
-    train_2d_traffic(model,
+    train_2d_advection(model,
                     train_loader,
-                    dataset.v,
+                    #dataset.v,
                     optimizer,
                     scheduler,
                     config,
@@ -50,7 +50,7 @@ def run(args, config):
 def test(config):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     data_config = config['data']
-    dataset = TrafficLoader(data_config['datapath'],
+    dataset = AdvectionLoader(data_config['datapath'],
                             nx=data_config['nx'], nt=data_config['nt'],
                             sub=data_config['sub'], sub_t=data_config['sub_t'], new=True)
     dataloader = dataset.make_loader(n_sample=data_config['n_sample'],
@@ -68,7 +68,9 @@ def test(config):
         ckpt = torch.load(ckpt_path)
         model.load_state_dict(ckpt['model'])
         print('Weights loaded from %s' % ckpt_path)
-    eval_traffic(model, dataloader, dataset.v, config, device)
+    eval_advection(model, dataloader, 
+                    #dataset.v, 
+                    config, device)
 
 
 if __name__ == '__main__':
