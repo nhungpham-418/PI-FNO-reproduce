@@ -1,0 +1,8 @@
+
+# Large experiment artifacts
+
+Results/*.mat
+
+checkpoints/**/*.pt
+
+#*.pt
