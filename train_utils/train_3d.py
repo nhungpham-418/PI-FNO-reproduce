@@ -3,7 +3,7 @@ from tqdm import tqdm
 from timeit import default_timer
 import torch.nn.functional as F
 from .utils import save_checkpoint
-from .losses import LpLoss, PINO_loss3d, get_forcing
+from .losses import LpLoss, PINO_loss3d, get_forcing, burgers2d_loss
 from .distributed import reduce_loss_dict
 from .data_utils import sample_data
 
@@ -12,6 +12,86 @@ try:
 except ImportError:
     wandb = None
     
+
+#############################################################################################
+# New function to train 2D Burger Equation
+
+def train_burgers2d(model,
+                    loader, train_loader,
+                    optimizer, scheduler,
+                    config,
+                    rank=0, log=False,
+                    project='PINO-3d-default',
+                    group='default'):
+    data_weight = config['train']['xy_loss']
+    f_weight    = config['train']['f_loss']
+    ic_weight   = config['train']['ic_loss']
+
+    # viscosity source: YAML first, else loader.nu
+    nu = config['data'].get('nu', None)
+    if nu is None:
+        nu = 0.0 if getattr(loader, "nu", None) is None else loader.nu
+
+    t_interval = config['data']['time_interval']
+
+    model.train()
+    myloss = LpLoss(size_average=True)
+
+    S = loader.S
+    T = loader.T
+    pbar = range(config['train']['epochs'])
+    if rank == 0:
+        pbar = tqdm(pbar, dynamic_ncols=True, smoothing=0.1)
+
+    for e in pbar:
+        train_pino = 0.0
+        data_l2 = 0.0
+        train_loss = 0.0
+
+        for x, y in train_loader:
+            x, y = x.to(rank), y.to(rank)      # x: (B,S,S,T,4), y:(B,S,S,T)
+            bsz = x.shape[0]
+
+            # match existing FNO3d time-padding pattern
+            x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
+            out = model(x_in).reshape(bsz, S, S, T + 5)[:, :, :, :-5]
+
+            # data loss
+            data_loss = myloss(out, y)
+
+            # IC (u0 is last channel of x features)
+            u0 = x[:, :, :, 0, -1]   # (B,S,S)
+            loss_u, loss_f = burgers2d_loss(out, u0, t_interval=t_interval)
+
+            total_loss = ic_weight * loss_u + f_weight * loss_f + data_weight * data_loss
+
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
+
+            train_pino += loss_f.item()
+            data_l2 += data_loss.item()
+            train_loss += total_loss.item()
+
+        scheduler.step()
+        train_pino /= len(train_loader)
+        data_l2 /= len(train_loader)
+        train_loss /= len(train_loader)
+
+        if rank == 0:
+            pbar.set_description(
+                f"Epoch {e}, loss {train_loss:.5f}, f {train_pino:.5f}, data {data_l2:.5f}"
+            )
+            
+    save_checkpoint(
+        config['train']['save_dir'],
+        config['train']['save_name'],
+        model,
+        optimizer
+    )
+    print("Done!")
+
+#############################################################################################
 
 def train(model,
           loader, train_loader,

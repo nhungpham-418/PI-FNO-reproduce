@@ -198,6 +198,85 @@ class AdvectionLoader(object):
         return loader
 
 
+#############################################################################################
+# New Loader for 2D Burger
+
+# in train_utils/datasets.py
+class Burgers2DLoader(object):
+    """
+    Loads 2D Burgers data from .mat:
+      input  : (N, Nx, Ny)
+      output : (N, Nt, Nx, Ny)
+
+    Produces TensorDataset(a, u):
+      a : (N, S, S, T, 4) -> [x, y, t, u0]
+      u : (N, S, S, T)
+    """
+    def __init__(self, datapath, nx, ny, nt, sub=1, sub_t=1, N=100, t_interval=1.0):
+        dataloader = MatReader(datapath)
+
+        x = dataloader.read_field("input")   # (N, Nx, Ny)
+        y = dataloader.read_field("output")  # (N, Nt, Nx, Ny)
+
+        # keep only first N samples
+        x = x[:N]
+        y = y[:N]
+
+        # subsample
+        x = x[:, ::sub, ::sub]              # (N, Sx, Sy)
+        y = y[:, ::sub_t, ::sub, ::sub]     # (N, T, Sx, Sy)
+
+        # shapes
+        self.Sx = x.shape[1]
+        self.Sy = x.shape[2]
+        assert self.Sx == self.Sy, "Burgers2DLoader assumes square grid (Nx==Ny) for get_grid3d."
+        self.S = self.Sx
+
+        self.T = y.shape[1]
+        self.time_scale = t_interval
+
+        # optional consistency checks with config
+        # (config nx,ny,nt are the ORIGINAL before subsampling)
+        # after sub/sub_t, expect Sx=nx//sub, Sy=ny//sub, T=nt//sub_t
+        assert self.Sx == (nx // sub) and self.Sy == (ny // sub), "subsampling mismatch with nx/ny"
+        assert self.T == (nt // sub_t), "sub_t mismatch with nt"
+
+        # store
+        self.x_data = x                                  # (N, S, S)
+        self.y_data = y.permute(0, 2, 3, 1).contiguous()  # (N, S, S, T)
+
+        # inviscid: no nu needed; keep placeholder if you want
+        self.nu = None
+
+    def make_dataset(self, n_sample, start=0, train=True):
+        if train:
+            a0 = self.x_data[start:start + n_sample]  # (n, S, S)
+            u  = self.y_data[start:start + n_sample]  # (n, S, S, T)
+        else:
+            a0 = self.x_data[-n_sample:]
+            u  = self.y_data[-n_sample:]
+
+        n = a0.shape[0]
+
+        # repeat IC across time
+        a0 = a0.reshape(n, self.S, self.S, 1, 1).repeat([1, 1, 1, self.T, 1])
+
+        # grids
+        gridx, gridy, gridt = get_grid3d(self.S, self.T, time_scale=self.time_scale)
+
+        # concat features: (x,y,t,u0)
+        a = torch.cat((
+            gridx.repeat([n, 1, 1, 1, 1]),
+            gridy.repeat([n, 1, 1, 1, 1]),
+            gridt.repeat([n, 1, 1, 1, 1]),
+            a0
+        ), dim=-1)  # (n, S, S, T, 4)
+
+        return torch.utils.data.TensorDataset(a, u)
+
+
+
+
 
 #############################################################################################
 

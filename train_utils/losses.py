@@ -399,6 +399,77 @@ def advection_loss(u, u0):
 #############################################################################################
 
 
+#############################################################################################
+# New loss for 2D Burger Equation
+
+
+# in train_utils/losses.py
+import torch.nn.functional as F
+import numpy as np
+
+def FDM_Burgers2D(u, t_interval=0.5):
+    """
+    u: (B, S, S, T) on [0,1)^2, t in [0, t_interval]
+    Returns residual on interior time steps: (B, S, S, T-2)
+    PDE: u_t + u (u_x + u_y) = 0
+    """
+    B, S, _, T = u.shape
+    device = u.device
+    dt = t_interval / (T - 1)
+
+    # FFT in space (x,y)
+    u_h = torch.fft.fft2(u, dim=[1, 2])
+
+    k_max = S // 2
+    N = S
+    kx = torch.cat([torch.arange(0, k_max, device=device),
+                    torch.arange(-k_max, 0, device=device)], 0).reshape(N, 1).repeat(1, N).reshape(1, N, N, 1)
+    ky = torch.cat([torch.arange(0, k_max, device=device),
+                    torch.arange(-k_max, 0, device=device)], 0).reshape(1, N).repeat(N, 1).reshape(1, N, N, 1)
+
+    # domain is [0,1): derivative multiplier is 2π i k
+    """ux_h = (2j * np.pi) * kx * u_h
+    uy_h = (2j * np.pi) * ky * u_h
+
+    ux = torch.fft.irfft2(ux_h[:, :, :k_max+1], dim=[1, 2])
+    uy = torch.fft.irfft2(uy_h[:, :, :k_max+1], dim=[1, 2])"""
+
+    ux_h = (2j * np.pi) * kx * u_h
+    uy_h = (2j * np.pi) * ky * u_h
+    
+    ux = torch.fft.ifft2(ux_h, dim=[1, 2]).real
+    uy = torch.fft.ifft2(uy_h, dim=[1, 2]).real
+
+
+    # time derivative (central diff) -> shape (B,S,S,T-2)
+    ut = (u[..., 2:] - u[..., :-2]) / (2 * dt)
+
+    # match time indices
+    u_mid  = u[..., 1:-1]
+    ux_mid = ux[..., 1:-1]
+    uy_mid = uy[..., 1:-1]
+
+    Du = ut + u_mid * (ux_mid + uy_mid)
+    return Du
+
+
+def burgers2d_loss(u_pred, u0, t_interval=0.5):
+    """
+    u_pred: (B,S,S,T)
+    u0:     (B,S,S)
+    """
+    loss_ic = F.mse_loss(u_pred[..., 0], u0)
+
+    Du = FDM_Burgers2D(u_pred, t_interval=t_interval)
+    loss_f = torch.mean(Du**2)  # zero RHS => use MSE, not relative
+
+    return loss_ic, loss_f
+
+
+
+#############################################################################################
+
+
 def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
     batchsize = u.size(0)
     nx = u.size(1)

@@ -4,13 +4,48 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from timeit import default_timer
 
-from .losses import LpLoss, PINO_loss3d
+from .losses import LpLoss, PINO_loss3d, burgers2d_loss
 
 try:
     import wandb
 except ImportError:
     wandb = None
 
+
+#############################################################################################
+# New function to Evaluate 2D Burger Equation
+
+
+def eval_burgers2d(model, dataloader, config, device, use_tqdm=True):
+    model.eval()
+    myloss = LpLoss(size_average=True)
+
+    nu = config['data'].get('nu', 0.0)
+    t_interval = config['data']['time_interval']
+
+    test_err, f_err = [], []
+
+    pbar = tqdm(dataloader, dynamic_ncols=True, smoothing=0.05) if use_tqdm else dataloader
+    for x, y in pbar:
+        x, y = x.to(device), y.to(device)
+        bsz = x.shape[0]
+        S = y.shape[1]
+        T = y.shape[-1]
+
+        x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
+        out = model(x_in).reshape(bsz, S, S, T + 5)[:, :, :, :-5]
+
+        data_loss = myloss(out, y)
+
+        u0 = x[:, :, :, 0, -1]
+        _, loss_f = burgers2d_loss(out, u0, nu=nu, t_interval=t_interval)
+
+        test_err.append(data_loss.item())
+        f_err.append(loss_f.item())
+
+    print(f"==Avg rel L2: {np.mean(test_err)}; PDE MSE: {np.mean(f_err)}==")
+
+#############################################################################################
 
 def eval_ns(model,  # model
             loader,  # dataset instance
