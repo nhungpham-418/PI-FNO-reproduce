@@ -67,6 +67,10 @@ def subprocess_fn(rank, args):
                   fc_dim=config['model']['fc_dim'],
                   layers=config['model']['layers']).to(rank)
 
+    print("-" * 100)
+    print("\nNumber of trainable parameters: ", sum(p.numel() for p in model.parameters()))
+    print("\n" + "-" * 100)
+
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']
         ckpt = torch.load(ckpt_path)
@@ -90,7 +94,7 @@ def subprocess_fn(rank, args):
         params = model.parameters()
 
     optimizer = Adam(params, betas=(0.9, 0.999),
-                     lr=config['train']['base_lr'])
+                     lr=config['train']['base_lr']) 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                      milestones=config['train']['milestones'],
                                                      gamma=config['train']['scheduler_gamma'])
