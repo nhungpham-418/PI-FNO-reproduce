@@ -89,7 +89,14 @@ class BurgersLoader(object):
             self.T += 1
         self.x_data = dataloader.read_field('input')[:, ::sub]
         self.y_data = dataloader.read_field('output')[:, ::sub_t, ::sub]
-        self.v = dataloader.read_field('visc').item()
+        # self.v = dataloader.read_field('visc').item()
+
+        try:
+            self.v = dataloader.read_field('visc').item()
+        except KeyError:
+            self.v = 0.0
+        
+        print(f"Burgers viscosity v = {self.v}")
 
     def make_loader(self, n_sample, batch_size, start=0, train=True):
         Xs = self.x_data[start:start + n_sample]

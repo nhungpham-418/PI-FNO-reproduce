@@ -1,9 +1,9 @@
 data:
   name: Burgers
-  datapath: '/home/tp526/neuraloperator/data/burgers_pino_x80_t81.mat'
+  datapath: '/home/jw3275/PI-FNO-reproduce/data/burgers_truth_x80_t81_1000_fixed_mask.mat'
   total_num: 1000
   offset: 0
-  n_sample: 800
+  n_sample: 1000 #800
   nx: 80
   nt: 80
   sub: 1
@@ -24,10 +24,10 @@ train:
   base_lr: 0.001
   scheduler_gamma: 0.5
   ic_loss: 0.0
-  f_loss: 0.001
+  f_loss: 1.0
   xy_loss: 1.0
   save_dir: 'burgers-FDM'
-  save_name: 'burgers-invisicd-data-0-pde-0.01-5-64-mode-15-x80.pt'
+  save_name: 'burgers-invisicd-data-1-pde-x-ic-0-5-64-mode-15-x80_t81_mask.pt'
 
 log:
   project: PINO-burgers-pretrain
