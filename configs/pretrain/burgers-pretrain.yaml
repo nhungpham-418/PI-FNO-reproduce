@@ -10,11 +10,11 @@ data:
   sub_t: 1 
 
 model:
-  layers: [100, 100, 100, 100, 100] #[16, 24, 24, 32, 32]
-  modes1: [32, 24, 15, 9, 9]
-  modes2: [32, 24, 15, 9, 9]
-  fc_dim: 128
-  act: tanh
+  layers: [64, 64, 64, 64] #[100, 100, 100, 100, 100] #[16, 24, 24, 32, 32]
+  modes1: [16, 12, 9, 9] #[32, 24, 15, 9, 9]
+  modes2: [16, 12, 9, 9] #[32, 24, 15, 9, 9]
+  fc_dim: 64 #128
+  act: gelu #tanh
   num_pad: 4
 
 train:
@@ -24,10 +24,10 @@ train:
   base_lr: 0.0005
   scheduler_gamma: 0.5
   ic_loss: 10.0
-  f_loss: 1.0
+  f_loss: 0.01
   xy_loss: 0.0
   save_dir: 'burgers-FDM'
-  save_name: 'burgers-invisicd-data-0-pde-1-5-100-mode-32.pt'
+  save_name: 'burgers-invisicd-data-0-pde-001-ic-1-4-64-mode-16.pt'
 
 log:
   project: PINO-burgers-pretrain

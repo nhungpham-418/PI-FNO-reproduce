@@ -4,15 +4,15 @@ import yaml
 import torch
 from models import FNO2d
 from train_utils import Adam
-from train_utils.datasets import BurgersLoader
-from train_utils.train_2d import train_2d_burger
+from train_utils.datasets import BurgersLoaderMask
+from train_utils.train_2d import train_2d_burger_mask
 from train_utils.eval_2d import eval_burgers
 
 
 def run(args, config):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     data_config = config['data']
-    dataset = BurgersLoader(data_config['datapath'],
+    dataset = BurgersLoaderMask(data_config['datapath'],
                             nx=data_config['nx'], nt=data_config['nt'],
                             sub=data_config['sub'], sub_t=data_config['sub_t'], new=True)
     train_loader = dataset.make_loader(n_sample=data_config['n_sample'],
@@ -35,9 +35,20 @@ def run(args, config):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                      milestones=config['train']['milestones'],
                                                      gamma=config['train']['scheduler_gamma'])
-    train_2d_burger(model,
+    # train_2d_burger(model,
+    #                 train_loader,
+    #                 dataset.v,
+    #                 optimizer,
+    #                 scheduler,
+    #                 config,
+    #                 rank=0,
+    #                 log=args.log,
+    #                 project=config['log']['project'],
+    #                 group=config['log']['group'])
+
+    train_2d_burger_mask(model,
                     train_loader,
-                    dataset.v,
+                    dataset.v, dataset.mask,
                     optimizer,
                     scheduler,
                     config,
