@@ -1,0 +1,44 @@
+data:
+  name: Burgers2D
+  # Path to your .mat with keys: input (N,Nx,Ny) and output (N,Nt,Nx,Ny)
+  datapath: /home/jw3275/PI-FNO-reproduce/data/burgers_2d_truth_xy100_t51_500_grf_033_mask_500.mat
+  total_num: 500
+  offset: 0
+  n_sample: 500
+  shuffle: true
+  nx: 100
+  ny: 100
+  nt: 51
+  time_interval: 0.5
+  sub: 1
+  sub_t: 1
+
+model:
+  # FNO3d defaults: in_dim=4 (x,y,t,u0), out_dim=1 (u)
+  layers: [64, 64, 64, 64]  # [64, 64, 64, 64]
+  modes1: [8, 8, 4, 4] #[8, 4, 4]  # [6, 4, 4]   # x Fourier modes per layer
+  modes2: [8, 8, 4, 4] #[8, 4, 4]  # [6, 4, 4]    # y Fourier modes per layer
+  modes3: [8, 8, 4, 4] #[8, 4, 4]  # [6, 4, 4]     # t Fourier modes per layer
+  fc_dim: 128 #100 #64
+  act: gelu
+
+train:
+  batchsize: 8
+  epochs: 250
+  milestones: [50, 100, 150, 200]
+  base_lr: 0.001
+  scheduler_gamma: 0.5
+  # Loss weights: total = ic_loss*L_ic + f_loss*L_pde + xy_loss*L_data
+  ic_loss: 0.0
+  f_loss: 0.1
+  xy_loss: 1.0
+  save_dir: burgers2d-PINO
+  save_name: burgers2d_inviscid_4_64_mode_8_8_physics-data-1-pde-01-mask-500-jack.pt
+  # Optional:
+  # ckpt: path/to/checkpoint.pt
+  # twolayer: false
+
+log:
+  project: PINO-burgers2d
+  group: inviscid-fullseries
+  entity: your-wandb-entity
