@@ -30,3 +30,9 @@ Results/*.mat
 
 # checkpoints/**/*.pt
 
+
+# local job logs
+scripts/logs/
+*.out
+*.err
+
