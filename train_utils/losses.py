@@ -155,47 +155,56 @@ class LpLoss(object):
     '''
     def __init__(self, d=2, p=2, size_average=True, reduction=True):
         super(LpLoss, self).__init__()
-
-        #Dimension and Lp-norm type are postive
+        # Dimension and Lp-norm type are positive
         assert d > 0 and p > 0
-
         self.d = d
         self.p = p
         self.reduction = reduction
         self.size_average = size_average
 
-    def abs(self, x, y):
+    def abs(self, x, y, mask=None):
         num_examples = x.size()[0]
 
-        #Assume uniform mesh
-        h = 1.0 / (x.size()[1] - 1.0)
+        if mask is not None:
+            mask = mask.unsqueeze(0)
+            # Apply mask: zero out non-masked points, keeping only masked ones
+            x = x * mask
+            y = y * mask
 
-        all_norms = (h**(self.d/self.p))*torch.norm(x.view(num_examples,-1) - y.view(num_examples,-1), self.p, 1)
+        h = 1.0 / (x.size()[1] - 1.0)
+        all_norms = (h**(self.d/self.p)) * torch.norm(
+            x.view(num_examples, -1) - y.view(num_examples, -1), self.p, 1
+        )
 
         if self.reduction:
             if self.size_average:
                 return torch.mean(all_norms)
             else:
                 return torch.sum(all_norms)
-
         return all_norms
 
-    def rel(self, x, y):
+    def rel(self, x, y, mask=None):
         num_examples = x.size()[0]
 
-        diff_norms = torch.norm(x.reshape(num_examples,-1) - y.reshape(num_examples,-1), self.p, 1)
-        y_norms = torch.norm(y.reshape(num_examples,-1), self.p, 1)
+        if mask is not None:
+            # Apply mask: zero out non-masked points, keeping only masked ones
+            x = x * mask
+            y = y * mask
+
+        diff_norms = torch.norm(
+            x.reshape(num_examples, -1) - y.reshape(num_examples, -1), self.p, 1
+        )
+        y_norms = torch.norm(y.reshape(num_examples, -1), self.p, 1)
 
         if self.reduction:
             if self.size_average:
-                return torch.mean(diff_norms/y_norms)
+                return torch.mean(diff_norms / y_norms)
             else:
-                return torch.sum(diff_norms/y_norms)
+                return torch.sum(diff_norms / y_norms)
+        return diff_norms / y_norms
 
-        return diff_norms/y_norms
-
-    def __call__(self, x, y):
-        return self.rel(x, y)
+    def __call__(self, x, y, mask=None):
+        return self.rel(x, y, mask=mask)
 
 
 def FDM_Burgers(u, v, D=1):

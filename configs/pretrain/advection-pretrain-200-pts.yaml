@@ -1,6 +1,6 @@
 data:
   name: Burgers
-  datapath: '../data/advection_pino.mat'
+  datapath: '/home/tp526/neuraloperator/data/advection_x100_t101_200_pts.mat'
   total_num: 800
   offset: 0
   n_sample: 500
@@ -23,11 +23,11 @@ train:
   milestones: [100, 200, 300, 400] #[10, 20, 30, 40]
   base_lr: 0.001
   scheduler_gamma: 0.5
-  ic_loss: 1.0
-  f_loss: 0.001
-  xy_loss: 0.0
+  ic_loss: 0.0
+  f_loss: 0
+  xy_loss: 1.0
   save_dir: 'advection-FDM'
-  save_name: 'advection-data-0-pde-0001-4-32-mode-15.pt'
+  save_name: 'advection-data-1-pde-0-4-32-mode-15-200-pts.pt'
 
 log:
   project: PINO-burgers-pretrain
