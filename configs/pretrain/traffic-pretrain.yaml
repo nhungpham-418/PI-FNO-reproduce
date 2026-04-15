@@ -10,24 +10,24 @@ data:
   sub_t: 1 
 
 model:
-  layers: [16, 24, 24, 32] #[16, 24, 24, 32, 32]
-  modes1: [15, 12, 9, 9]
-  modes2: [15, 12, 9, 9]
-  fc_dim: 128
+  layers: [16, 16, 16, 16] #[16, 24, 24, 32] #[16, 24, 24, 32, 32]
+  modes1: [8, 8, 6, 4] #[15, 12, 9, 9]
+  modes2: [8, 8, 6, 4] #[15, 12, 9, 9]
+  fc_dim: 32 #128
   act: gelu
   num_pad: 4
 
 train:
   batchsize: 20
   epochs: 500
-  milestones: [] #[10, 20, 30, 40]
+  milestones: [100, 200, 300, 400] #[10, 20, 30, 40]
   base_lr: 0.0005
   scheduler_gamma: 0.5
   ic_loss: 0.0
   f_loss: 0.0
   xy_loss: 1.0
   save_dir: 'traffic-FDM'
-  save_name: 'traffic-data-1-pde-0-ic-0-4-16-mode-15-x100.pt'
+  save_name: 'traffic-data-1-pde-0-ic-0-4-16-mode-8-x100.pt'
 
 log:
   project: PINO-burgers-pretrain
