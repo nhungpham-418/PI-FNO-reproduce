@@ -29,11 +29,11 @@ train:
   base_lr: 0.001
   scheduler_gamma: 0.5
   # Loss weights: total = ic_loss*L_ic + f_loss*L_pde + xy_loss*L_data
-  ic_loss: 100.0
-  f_loss: 1.0
-  xy_loss: 0.0
+  ic_loss: 0.0
+  f_loss: 0.0
+  xy_loss: 1.0
   save_dir: burgers2d-PINO
-  save_name: burgers2d_inviscid_4_32_mode_8_physics.pt
+  save_name: burgers2d_inviscid_4_32_mode_8_data.pt
   # Optional:
   # ckpt: path/to/checkpoint.pt
   # twolayer: false
