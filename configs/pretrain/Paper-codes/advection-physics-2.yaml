@@ -1,0 +1,36 @@
+data:
+  name: Burgers
+  datapath: '../data/advection_pino.mat'
+  total_num: 800
+  offset: 0
+  n_sample: 800
+  nx: 100
+  nt: 100
+  sub: 1
+  sub_t: 1 
+
+model:
+  layers: [12, 12, 16] #[16, 24, 24, 32, 32]
+  modes1: [8, 6, 4]
+  modes2: [8, 6, 4]
+  fc_dim: 32
+  act: gelu
+  num_pad: 4
+
+train:
+  batchsize: 20
+  epochs: 1000
+  milestones: [150, 300, 450, 600, 750, 900]
+  base_lr: 0.001
+  scheduler_gamma: 0.5
+  ic_loss: 10.0
+  f_loss: 1.0
+  xy_loss: 0.0
+  save_dir: 'Paper-models'
+  save_name: 'advection-physic-2.pt'
+
+log:
+  project: PINO-burgers-pretrain
+  group: gelu-eqn
+  entity: hzzheng-pino
+

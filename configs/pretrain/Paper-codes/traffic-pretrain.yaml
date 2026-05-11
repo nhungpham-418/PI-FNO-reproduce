@@ -1,18 +1,18 @@
 data:
   name: Burgers
-  datapath: '../data/burgers_pino_x80_t81.mat'
+  datapath: '../data/traffic_pino_x100_t101_1000.mat'
   total_num: 1000
   offset: 0
   n_sample: 1000
-  nx: 128
+  nx: 100
   nt: 100
   sub: 1
   sub_t: 1 
 
 model:
-  layers: [12, 16, 24, 32] #[64, 64, 64, 64] #[100, 100, 100, 100, 100] #[16, 24, 24, 32, 32]
-  modes1: [10, 6, 4] #[16, 12, 9, 9] #[32, 24, 15, 9, 9]
-  modes2: [10, 6, 4] #[16, 12, 9, 9] #[32, 24, 15, 9, 9]
+  layers: [12, 16, 20, 24] 
+  modes1: [10, 6, 4] 
+  modes2: [10, 6, 4] 
   fc_dim: 32 #64 #128
   act: gelu #tanh
   num_pad: 4
@@ -21,13 +21,13 @@ train:
   batchsize: 20
   epochs: 1000
   milestones: [150, 300, 450, 600, 750, 900]
-  base_lr: 0.0005
+  base_lr: 0.001
   scheduler_gamma: 0.5
   ic_loss: 0.0
-  f_loss: 0
+  f_loss: 0.0
   xy_loss: 1.0
   save_dir: 'Paper-models'
-  save_name: 'burgers-invisicd-data.pt'
+  save_name: 'traffic-data.pt'
 
 log:
   project: PINO-burgers-pretrain

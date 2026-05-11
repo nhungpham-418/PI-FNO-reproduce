@@ -24,6 +24,12 @@ def run(args, config):
                   fc_dim=config['model']['fc_dim'],
                   layers=config['model']['layers'],
                   act=config['model']['act']).to(device)
+
+    # Print number of parameters
+    print("-" * 100)
+    print("\nNumber of trainable parameters: ", sum(p.numel() for p in model.parameters()))
+    print("\n" + "-" * 100)
+    
     # Load from checkpoint
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']

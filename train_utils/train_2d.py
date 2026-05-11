@@ -184,10 +184,10 @@ def train_2d_burger(model,
                 }
             )
 
-        if e % 100 == 0:
-            save_checkpoint(config['train']['save_dir'],
-                            config['train']['save_name'].replace('.pt', f'_{e}.pt'),
-                            model, optimizer)
+        # if e % 100 == 0:
+        #     save_checkpoint(config['train']['save_dir'],
+        #                     config['train']['save_name'].replace('.pt', f'_{e}.pt'),
+        #                     model, optimizer)
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
@@ -360,10 +360,10 @@ def train_2d_traffic(model,
                 }
             )
 
-        if e % 100 == 0:
-            save_checkpoint(config['train']['save_dir'],
-                            config['train']['save_name'].replace('.pt', f'_{e}.pt'),
-                            model, optimizer)
+        # if e % 100 == 0:
+        #     save_checkpoint(config['train']['save_dir'],
+        #                     config['train']['save_name'].replace('.pt', f'_{e}.pt'),
+        #                     model, optimizer)
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
@@ -442,10 +442,10 @@ def train_2d_advection(model,
                 }
             )
 
-        if e % 100 == 0:
-            save_checkpoint(config['train']['save_dir'],
-                            config['train']['save_name'].replace('.pt', f'_{e}.pt'),
-                            model, optimizer)
+        # if e % 100 == 0:
+        #     save_checkpoint(config['train']['save_dir'],
+        #                     config['train']['save_name'].replace('.pt', f'_{e}.pt'),
+        #                     model, optimizer)
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
